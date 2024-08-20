@@ -148,10 +148,10 @@ export function CalculationForm() {
         />
       </form>
       <p>
-        Person 1&apos;s Contributions: {contributions.person1Contribution.toFixed(2)}
+        Person 1&apos;s Contributions: {formatNumber(contributions.person1Contribution.toFixed(2))}
       </p>
       <p>
-        Person 2&apos;s Contributions: {contributions.person2Contribution.toFixed(2)}
+        Person 2&apos;s Contributions: {formatNumber(contributions.person2Contribution.toFixed(2))}
       </p>
     </Form>
   );
