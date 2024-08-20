@@ -101,12 +101,19 @@ export function CalculationForm() {
                       placeholder=""
                       value={formatNumber(formField.value)}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9,]/g, "");
-                        const parsedValue = parseNumber(value);
+                        // Restrict input to numbers and commas
+                        let value = e.target.value.replace(/[^0-9,]/g, "");
+                        let parsedValue = parseNumber(value);
+
+                        // Check if the number of digits exceeds 7
+                        if (parsedValue.length > 7) {
+                          parsedValue = parsedValue.slice(0, 7);
+                        }
+
                         formField.onChange(
                           parsedValue ? parseFloat(parsedValue) : 0,
                         );
-                        handleChange();
+                        handleChange(); // Trigger recalculation on change
                       }}
                       type="text"
                       autoComplete="off"
@@ -130,12 +137,19 @@ export function CalculationForm() {
                   placeholder=""
                   value={formatNumber(formField.value)}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9,]/g, "");
-                    const parsedValue = parseNumber(value);
+                    // Restrict input to numbers and commas
+                    let value = e.target.value.replace(/[^0-9,]/g, "");
+                    let parsedValue = parseNumber(value);
+
+                    // Check if the number of digits exceeds 7
+                    if (parsedValue.length > 7) {
+                      parsedValue = parsedValue.slice(0, 7);
+                    }
+
                     formField.onChange(
                       parsedValue ? parseFloat(parsedValue) : 0,
                     );
-                    handleChange(); 
+                    handleChange(); // Trigger recalculation on change
                   }}
                   type="text"
                   autoComplete="off"
