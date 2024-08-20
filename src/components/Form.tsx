@@ -16,26 +16,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { FIELDS } from "@/constants/FIELDS";
 
+// Define the schema for the form using Zod
 const formSchema = z.object({
   person1Salary: z.coerce.number(),
   person2Salary: z.coerce.number(),
   expense: z.coerce.number(),
 });
 
+// Format numbers with commas for readability
 function formatNumber(value: string | number) {
   return Number(value).toLocaleString("en-US");
 }
 
+// Parse numbers by removing commas
 function parseNumber(value: string) {
   return value.replace(/,/g, "");
 }
 
 export function CalculationForm() {
+  // Retrieve saved input values from localStorage (if available)
   const savedInputs =
     typeof window !== "undefined"
       ? JSON.parse(localStorage.getItem("inputs") || "{}")
       : {};
 
+  // Initialize the form with default values and schema validation
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,11 +50,13 @@ export function CalculationForm() {
     },
   });
 
+  // State to store the calculated contributions
   const [contributions, setContributions] = useState({
     person1Contribution: 0,
     person2Contribution: 0,
   });
 
+  // Load saved contributions from localStorage on component mount
   useEffect(() => {
     const savedContributions = localStorage.getItem("contributions");
     if (savedContributions) {
@@ -57,6 +64,7 @@ export function CalculationForm() {
     }
   }, []);
 
+  // Calculate contributions based on the current form values
   function calculateContributions(values: z.infer<typeof formSchema>) {
     const totalIncome = values.person1Salary + values.person2Salary;
     const person1Percentage = values.person1Salary / totalIncome;
@@ -70,15 +78,18 @@ export function CalculationForm() {
       person2Contribution,
     };
 
+    // Save the calculated contributions and form values to localStorage
     localStorage.setItem(
       "contributions",
       JSON.stringify(calculatedContributions),
     );
     localStorage.setItem("inputs", JSON.stringify(values));
 
+    // Update the state with the new contributions
     setContributions(calculatedContributions);
   }
 
+  // Handle input changes and trigger recalculation
   function handleChange() {
     const values = form.getValues();
     calculateContributions(values);
@@ -105,7 +116,7 @@ export function CalculationForm() {
                         let value = e.target.value.replace(/[^0-9,]/g, "");
                         let parsedValue = parseNumber(value);
 
-                        // Check if the number of digits exceeds 7
+                        // Ensure the number of digits does not exceed 7
                         if (parsedValue.length > 7) {
                           parsedValue = parsedValue.slice(0, 7);
                         }
@@ -115,7 +126,8 @@ export function CalculationForm() {
                         );
                         handleChange(); // Trigger recalculation on change
                       }}
-                      type="text"
+                      type="text" // Keeps it as text for formatting purposes
+                      inputMode="numeric" // Prompts numeric keyboard on mobile devices
                       autoComplete="off"
                       className="input-no-spinner"
                     />
@@ -141,7 +153,7 @@ export function CalculationForm() {
                     let value = e.target.value.replace(/[^0-9,]/g, "");
                     let parsedValue = parseNumber(value);
 
-                    // Check if the number of digits exceeds 7
+                    // Ensure the number of digits does not exceed 7
                     if (parsedValue.length > 7) {
                       parsedValue = parsedValue.slice(0, 7);
                     }
@@ -151,7 +163,8 @@ export function CalculationForm() {
                     );
                     handleChange(); // Trigger recalculation on change
                   }}
-                  type="text"
+                  type="text" // Keeps it as text for formatting purposes
+                  inputMode="numeric" // Prompts numeric keyboard on mobile devices
                   autoComplete="off"
                   className="input-no-spinner"
                 />
