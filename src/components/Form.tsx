@@ -6,15 +6,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { FIELDS } from "@/constants/FIELDS";
+import { Label } from "./ui/label";
+import { Button } from "./ui/button";
 
 // Define the schema for the form using Zod
 const formSchema = z.object({
@@ -34,6 +36,9 @@ function parseNumber(value: string) {
 }
 
 export function CalculationForm() {
+  // State for remarks input
+  const [remarks, setRemarks] = useState("");
+
   // Retrieve saved input values from localStorage (if available)
   const savedInputs =
     typeof window !== "undefined"
@@ -95,10 +100,15 @@ export function CalculationForm() {
     calculateContributions(values);
   }
 
+  // Handle clearing the remarks input
+  function clearRemarks() {
+    setRemarks("");
+  }
+
   return (
     <Form {...form}>
       <form className="space-y-8">
-        <div className="gap-x-8 sm:flex mx-auto">
+        <div className="mx-auto gap-x-8 sm:flex">
           {FIELDS.slice(0, 2).map((field) => (
             <FormField
               key={field.name}
@@ -175,11 +185,33 @@ export function CalculationForm() {
         />
       </form>
       <p>
-        Person 1&apos;s Contributions: {formatNumber(contributions.person1Contribution.toFixed(2))}
+        Person 1&apos;s Contributions:{" "}
+        {formatNumber(contributions.person1Contribution.toFixed(2))}
       </p>
-      <p>
-        Person 2&apos;s Contributions: {formatNumber(contributions.person2Contribution.toFixed(2))}
+      <p className="-mt-3">
+        Person 2&apos;s Contributions:{" "}
+        {formatNumber(contributions.person2Contribution.toFixed(2))}
       </p>
+      <Label className="text-base">
+        Remarks:
+        <div className="relative">
+          <Input
+            className="mt-1 capitalize placeholder:normal-case"
+            placeholder="e.g., Groceries"
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+          />
+          {remarks && (
+            <Button
+              onClick={clearRemarks}
+              variant="ghost"
+              className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer px-3 h-8 mr-1"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </Label>
     </Form>
   );
 }
