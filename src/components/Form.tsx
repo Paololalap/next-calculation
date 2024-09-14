@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Form,
   FormControl,
@@ -14,9 +16,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { FIELDS } from "@/constants/FIELDS";
-import { Label } from "./ui/label";
-import { Button } from "./ui/button";
 
 // Define the schema for the form using Zod
 const formSchema = z.object({
@@ -26,26 +27,26 @@ const formSchema = z.object({
 });
 
 // Format numbers with commas for readability
-function formatNumber(value: string | number) {
+const formatNumber = (value: string | number) => {
   return Number(value).toLocaleString("en-US");
-}
+};
 
 // Parse numbers by removing commas
-function parseNumber(value: string) {
+const parseNumber = (value: string) => {
   return value.replace(/,/g, "");
-}
+};
 
 export function CalculationForm() {
-  // State for remarks input
   const [remarks, setRemarks] = useState("");
 
-  // Retrieve saved input values from localStorage (if available)
-  const savedInputs =
-    typeof window !== "undefined"
-      ? JSON.parse(localStorage.getItem("inputs") || "{}")
-      : {};
+  // Memoize the saved inputs
+  const savedInputs = useMemo(() => {
+    if (typeof window !== "undefined") {
+      return JSON.parse(localStorage.getItem("inputs") || "{}");
+    }
+    return {};
+  }, []);
 
-  // Initialize the form with default values and schema validation
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -55,13 +56,11 @@ export function CalculationForm() {
     },
   });
 
-  // State to store the calculated contributions
   const [contributions, setContributions] = useState({
     person1Contribution: 0,
     person2Contribution: 0,
   });
 
-  // Load saved contributions from localStorage on component mount
   useEffect(() => {
     const savedContributions = localStorage.getItem("contributions");
     if (savedContributions) {
@@ -69,41 +68,42 @@ export function CalculationForm() {
     }
   }, []);
 
-  // Calculate contributions based on the current form values
-  function calculateContributions(values: z.infer<typeof formSchema>) {
-    const totalIncome = values.person1Salary + values.person2Salary;
-    const person1Percentage = values.person1Salary / totalIncome;
-    const person2Percentage = values.person2Salary / totalIncome;
+  // Memoize the calculation function
+  const calculateContributions = useMemo(() => {
+    return (values: z.infer<typeof formSchema>) => {
+      const totalIncome = values.person1Salary + values.person2Salary;
+      const person1Percentage = values.person1Salary / totalIncome;
+      const person2Percentage = values.person2Salary / totalIncome;
 
-    const person1Contribution = person1Percentage * values.expense;
-    const person2Contribution = person2Percentage * values.expense;
+      const person1Contribution = person1Percentage * values.expense;
+      const person2Contribution = person2Percentage * values.expense;
 
-    const calculatedContributions = {
-      person1Contribution,
-      person2Contribution,
+      const calculatedContributions = {
+        person1Contribution,
+        person2Contribution,
+      };
+
+      localStorage.setItem(
+        "contributions",
+        JSON.stringify(calculatedContributions),
+      );
+      localStorage.setItem("inputs", JSON.stringify(values));
+
+      return calculatedContributions;
     };
+  }, []);
 
-    // Save the calculated contributions and form values to localStorage
-    localStorage.setItem(
-      "contributions",
-      JSON.stringify(calculatedContributions),
-    );
-    localStorage.setItem("inputs", JSON.stringify(values));
-
-    // Update the state with the new contributions
-    setContributions(calculatedContributions);
-  }
-
-  // Handle input changes and trigger recalculation
-  function handleChange() {
+  // Use useCallback for handleChange
+  const handleChange = useCallback(() => {
     const values = form.getValues();
-    calculateContributions(values);
-  }
+    const newContributions = calculateContributions(values);
+    setContributions(newContributions);
+  }, [form, calculateContributions]);
 
-  // Handle clearing the remarks input
-  function clearRemarks() {
+  // Use useCallback for clearRemarks
+  const clearRemarks = useCallback(() => {
     setRemarks("");
-  }
+  }, []);
 
   return (
     <Form {...form}>
@@ -122,11 +122,9 @@ export function CalculationForm() {
                       placeholder=""
                       value={formatNumber(formField.value)}
                       onChange={(e) => {
-                        // Restrict input to numbers and commas
                         let value = e.target.value.replace(/[^0-9,]/g, "");
                         let parsedValue = parseNumber(value);
 
-                        // Ensure the number of digits does not exceed 7
                         if (parsedValue.length > 7) {
                           parsedValue = parsedValue.slice(0, 7);
                         }
@@ -134,10 +132,10 @@ export function CalculationForm() {
                         formField.onChange(
                           parsedValue ? parseFloat(parsedValue) : 0,
                         );
-                        handleChange(); // Trigger recalculation on change
+                        handleChange();
                       }}
-                      type="text" // Keeps it as text for formatting purposes
-                      inputMode="numeric" // Prompts numeric keyboard on mobile devices
+                      type="text"
+                      inputMode="numeric"
                       autoComplete="off"
                       className="input-no-spinner"
                     />
@@ -159,11 +157,9 @@ export function CalculationForm() {
                   placeholder=""
                   value={formatNumber(formField.value)}
                   onChange={(e) => {
-                    // Restrict input to numbers and commas
                     let value = e.target.value.replace(/[^0-9,]/g, "");
                     let parsedValue = parseNumber(value);
 
-                    // Ensure the number of digits does not exceed 7
                     if (parsedValue.length > 7) {
                       parsedValue = parsedValue.slice(0, 7);
                     }
@@ -171,10 +167,10 @@ export function CalculationForm() {
                     formField.onChange(
                       parsedValue ? parseFloat(parsedValue) : 0,
                     );
-                    handleChange(); // Trigger recalculation on change
+                    handleChange();
                   }}
-                  type="text" // Keeps it as text for formatting purposes
-                  inputMode="numeric" // Prompts numeric keyboard on mobile devices
+                  type="text"
+                  inputMode="numeric"
                   autoComplete="off"
                   className="input-no-spinner"
                 />
@@ -194,22 +190,25 @@ export function CalculationForm() {
       </p>
       <Label className="text-base">
         Remarks:
-        <div className="relative">
-          <Input
-            className="mt-1 capitalize placeholder:normal-case"
-            placeholder="e.g., Groceries"
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-          />
-          {remarks && (
-            <Button
-              onClick={clearRemarks}
-              variant="ghost"
-              className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer px-3 h-8 mr-1"
-            >
-              Clear
-            </Button>
-          )}
+        <div className="mt-1 flex flex-col gap-1 min-[400px]:flex-row">
+          <div className="relative w-full">
+            <Input
+              className="capitalize placeholder:normal-case"
+              placeholder="e.g., Groceries"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+            />
+            {remarks && (
+              <Button
+                onClick={clearRemarks}
+                variant="ghost"
+                className="absolute right-0 top-1/2 mr-1 h-8 -translate-y-1/2 cursor-pointer px-3"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+          <DatePicker />
         </div>
       </Label>
     </Form>
